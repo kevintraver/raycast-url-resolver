@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Form,
   Detail,
@@ -10,60 +10,60 @@ import {
   getPreferenceValues,
   Clipboard,
   useNavigation,
-  popToRoot
-} from '@raycast/api'
-import net from 'node:net'
-import { resolveUrl } from './lib/resolve'
-import type { Preferences, ResolveResult } from './types'
+  popToRoot,
+} from "@raycast/api";
+import net from "node:net";
+import { resolveUrl } from "./lib/resolve";
+import type { Preferences, ResolveResult } from "./types";
 
 function parseClampedInt(
   value: string | undefined,
   defaultValue: number,
   { min, max }: { min: number; max: number }
 ): number {
-  const parsed = Number.parseInt(value ?? '', 10)
-  const safe = Number.isFinite(parsed) ? parsed : defaultValue
-  return Math.min(max, Math.max(min, safe))
+  const parsed = Number.parseInt(value ?? "", 10);
+  const safe = Number.isFinite(parsed) ? parsed : defaultValue;
+  return Math.min(max, Math.max(min, safe));
 }
 
 function looksLikeUrl(text: string): boolean {
-  if (text.length > 2000) return false
-  if (/\s/.test(text)) return false
+  if (text.length > 2000) return false;
+  if (/\s/.test(text)) return false;
 
-  const candidate = text.match(/^https?:\/\//) ? text : `https://${text}`
+  const candidate = text.match(/^https?:\/\//) ? text : `https://${text}`;
 
   try {
-    const url = new URL(candidate)
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    const url = new URL(candidate);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
 
-    const hostname = url.hostname.toLowerCase()
+    const hostname = url.hostname.toLowerCase();
     return (
-      hostname === 'localhost' ||
-      hostname.includes('.') ||
+      hostname === "localhost" ||
+      hostname.includes(".") ||
       net.isIP(hostname) !== 0
-    )
+    );
   } catch {
-    return false
+    return false;
   }
 }
 
 function ResultsView({
   result,
-  onRetry
+  onRetry,
 }: {
-  result: ResolveResult
-  onRetry?: () => void
+  result: ResolveResult;
+  onRetry?: () => void;
 }) {
   const traceMarkdown =
     result.trace.length > 1
-      ? `\n\n### Redirect Chain\n${result.trace.map((url, i) => `${i + 1}. \`${url}\``).join('\n')}`
-      : ''
+      ? `\n\n### Redirect Chain\n${result.trace.map((url, i) => `${i + 1}. \`${url}\``).join("\n")}`
+      : "";
 
   const markdown = result.error
     ? `# Error\n\n${result.error}\n\n---\n\n### Original\n\`${result.originalUrl}\`${traceMarkdown}`
-    : `# Resolved URL\n\n### Original\n\`${result.originalUrl}\`${traceMarkdown}\n\n### Final URL\n[${result.finalUrl}](${result.finalUrl})`
+    : `# Resolved URL\n\n### Original\n\`${result.originalUrl}\`${traceMarkdown}\n\n### Final URL\n[${result.finalUrl}](${result.finalUrl})`;
 
-  const isTimeoutError = result.error?.toLowerCase().includes('timeout')
+  const isTimeoutError = result.error?.toLowerCase().includes("timeout");
 
   return (
     <Detail
@@ -105,13 +105,13 @@ function ResultsView({
                   title="Copy IP Address"
                   content={result.finalIp}
                   onCopy={() => popToRoot()}
-                  shortcut={{ modifiers: ['cmd'], key: 'i' }}
+                  shortcut={{ modifiers: ["cmd"], key: "i" }}
                 />
               ) : null}
               {result.trace.length > 1 ? (
                 <Action.CopyToClipboard
                   title="Copy Trace"
-                  content={result.trace.join('\n')}
+                  content={result.trace.join("\n")}
                 />
               ) : null}
             </>
@@ -134,83 +134,90 @@ function ResultsView({
         </ActionPanel>
       }
     />
-  )
+  );
 }
 
-type DnsProvider = 'cloudflare' | 'google' | 'quad9' | 'opendns'
+type DnsProvider = "cloudflare" | "google" | "quad9" | "opendns";
 
 export default function Command() {
-  const { push } = useNavigation()
-  const [url, setUrl] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { push } = useNavigation();
+  const [url, setUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const preferences = getPreferenceValues<Preferences>()
-  const [provider, setProvider] = useState<DnsProvider>(preferences.dnsProvider)
+  const preferences = getPreferenceValues<Preferences>();
+  const [provider, setProvider] = useState<DnsProvider>(
+    preferences.dnsProvider
+  );
 
   const maxRedirects = parseClampedInt(preferences.maxRedirects, 10, {
     min: 1,
-    max: 50
-  })
+    max: 50,
+  });
   const timeout = parseClampedInt(preferences.timeout, 3000, {
     min: 250,
-    max: 60000
-  })
+    max: 60000,
+  });
 
   useEffect(() => {
     async function checkClipboard() {
       try {
-        const clipboardText = await Clipboard.readText()
+        const clipboardText = await Clipboard.readText();
         if (clipboardText) {
-          const trimmed = clipboardText.trim()
+          const trimmed = clipboardText.trim();
           if (looksLikeUrl(trimmed)) {
-            setUrl(trimmed)
+            setUrl(trimmed);
           }
         }
       } catch {
         // Clipboard access failed, ignore
       }
     }
-    checkClipboard()
-  }, [])
+    checkClipboard();
+  }, []);
 
   async function handleSubmit(retryTimeout?: number) {
-    const input = url.trim()
+    const input = url.trim();
     if (!input) {
-      showToast({ style: Toast.Style.Failure, title: 'Please enter a URL' })
-      return
+      showToast({ style: Toast.Style.Failure, title: "Please enter a URL" });
+      return;
     }
 
     if (!looksLikeUrl(input)) {
-      showToast({ style: Toast.Style.Failure, title: 'Invalid URL' })
-      return
+      showToast({ style: Toast.Style.Failure, title: "Invalid URL" });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
-    const useTimeout = retryTimeout ?? timeout
+    const useTimeout = retryTimeout ?? timeout;
 
     try {
-      const result = await resolveUrl(input, maxRedirects, useTimeout, provider)
+      const result = await resolveUrl(
+        input,
+        maxRedirects,
+        useTimeout,
+        provider
+      );
 
       if (result.error) {
         showToast({
           style: Toast.Style.Failure,
-          title: 'Error',
-          message: result.error
-        })
+          title: "Error",
+          message: result.error,
+        });
       } else {
-        showToast({ style: Toast.Style.Success, title: 'Resolved' })
+        showToast({ style: Toast.Style.Success, title: "Resolved" });
       }
 
       const onRetry = () => {
-        handleSubmit(timeout * 3)
-      }
+        handleSubmit(timeout * 3);
+      };
 
-      push(<ResultsView result={result} onRetry={onRetry} />)
+      push(<ResultsView result={result} onRetry={onRetry} />);
     } catch {
-      showToast({ style: Toast.Style.Failure, title: 'Failed to resolve URL' })
+      showToast({ style: Toast.Style.Failure, title: "Failed to resolve URL" });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -222,35 +229,35 @@ export default function Command() {
           <Action.SubmitForm
             title="Resolve URL"
             icon={Icon.Link}
-            shortcut={{ modifiers: [], key: 'return' }}
+            shortcut={{ modifiers: [], key: "return" }}
             onSubmit={() => handleSubmit()}
           />
           <ActionPanel.Submenu
             // eslint-disable-next-line @raycast/prefer-title-case
             title="Change DNS Provider…"
             icon={Icon.Globe}
-            shortcut={{ modifiers: ['cmd'], key: 'd' }}
+            shortcut={{ modifiers: ["cmd"], key: "d" }}
           >
             <Action
-              title={`Cloudflare (1.1.1.1)${provider === 'cloudflare' ? ' ✓' : ''}`}
+              title={`Cloudflare (1.1.1.1)${provider === "cloudflare" ? " ✓" : ""}`}
               icon={Icon.Globe}
-              onAction={() => setProvider('cloudflare')}
+              onAction={() => setProvider("cloudflare")}
             />
             <Action
-              title={`Google (8.8.8.8)${provider === 'google' ? ' ✓' : ''}`}
+              title={`Google (8.8.8.8)${provider === "google" ? " ✓" : ""}`}
               icon={Icon.Globe}
-              onAction={() => setProvider('google')}
+              onAction={() => setProvider("google")}
             />
             <Action
-              title={`Quad9 (9.9.9.9)${provider === 'quad9' ? ' ✓' : ''}`}
+              title={`Quad9 (9.9.9.9)${provider === "quad9" ? " ✓" : ""}`}
               icon={Icon.Globe}
-              onAction={() => setProvider('quad9')}
+              onAction={() => setProvider("quad9")}
             />
             <Action
               // eslint-disable-next-line @raycast/prefer-title-case
-              title={`OpenDNS (208.67.222.222)${provider === 'opendns' ? ' ✓' : ''}`}
+              title={`OpenDNS (208.67.222.222)${provider === "opendns" ? " ✓" : ""}`}
               icon={Icon.Globe}
-              onAction={() => setProvider('opendns')}
+              onAction={() => setProvider("opendns")}
             />
           </ActionPanel.Submenu>
         </ActionPanel>
@@ -292,5 +299,5 @@ export default function Command() {
         />
       </Form.Dropdown>
     </Form>
-  )
+  );
 }
