@@ -226,6 +226,7 @@ export default function Command() {
             onSubmit={() => handleSubmit()}
           />
           <ActionPanel.Submenu
+            // eslint-disable-next-line @raycast/prefer-title-case
             title="Change DNS Provider…"
             icon={Icon.Globe}
             shortcut={{ modifiers: ['cmd'], key: 'd' }}
@@ -246,6 +247,7 @@ export default function Command() {
               onAction={() => setProvider('quad9')}
             />
             <Action
+              // eslint-disable-next-line @raycast/prefer-title-case
               title={`OpenDNS (208.67.222.222)${provider === 'opendns' ? ' ✓' : ''}`}
               icon={Icon.Globe}
               onAction={() => setProvider('opendns')}
