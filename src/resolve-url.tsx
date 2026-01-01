@@ -226,7 +226,7 @@ export default function Command() {
             onSubmit={() => handleSubmit()}
           />
           <ActionPanel.Submenu
-            title="Change Dns Provider"
+            title="Change DNS Provider…"
             icon={Icon.Globe}
             shortcut={{ modifiers: ['cmd'], key: 'd' }}
           >
