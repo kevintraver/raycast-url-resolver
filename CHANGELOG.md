@@ -1,6 +1,6 @@
 # URL Resolver Changelog
 
-## [2.1.0] - 2025-12-13
+## [2.1.0] - {PR_MERGE_DATE}
 
 ### Changed
 - Renamed extension from "Cloudflare DNS Resolver" to "URL Resolver"

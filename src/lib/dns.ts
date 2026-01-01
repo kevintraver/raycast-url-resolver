@@ -1,5 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
-import type { DoHResponse, Preferences } from "../types";
+import type { DoHResponse } from "../types";
 import { debugLog } from "./log";
 
 // DNS-over-HTTPS providers

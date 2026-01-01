@@ -1,11 +1,5 @@
 import type http from "node:http";
 
-export interface Preferences {
-  maxRedirects: string;
-  timeout: string;
-  dnsProvider: "cloudflare" | "google" | "quad9" | "opendns";
-}
-
 export interface ResolveResult {
   originalUrl: string;
   finalUrl: string;

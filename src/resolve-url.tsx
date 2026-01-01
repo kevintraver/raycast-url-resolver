@@ -14,7 +14,7 @@ import {
 } from "@raycast/api";
 import net from "node:net";
 import { resolveUrl } from "./lib/resolve";
-import type { Preferences, ResolveResult } from "./types";
+import type { ResolveResult } from "./types";
 
 function parseClampedInt(
   value: string | undefined,
