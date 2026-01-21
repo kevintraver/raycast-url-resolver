@@ -67,7 +67,7 @@
       "name": "timeout",
       "type": "textfield",
       "required": false,
-      "title": "Timeout (ms)",
+      "title": "Timeout (Ms)",
       "description": "Request timeout in milliseconds",
       "default": "3000"
     }
