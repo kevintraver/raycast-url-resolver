@@ -37,23 +37,13 @@ function looksLikeUrl(text: string): boolean {
     if (url.protocol !== "http:" && url.protocol !== "https:") return false;
 
     const hostname = url.hostname.toLowerCase();
-    return (
-      hostname === "localhost" ||
-      hostname.includes(".") ||
-      net.isIP(hostname) !== 0
-    );
+    return hostname === "localhost" || hostname.includes(".") || net.isIP(hostname) !== 0;
   } catch {
     return false;
   }
 }
 
-function ResultsView({
-  result,
-  onRetry,
-}: {
-  result: ResolveResult;
-  onRetry?: () => void;
-}) {
+function ResultsView({ result, onRetry }: { result: ResolveResult; onRetry?: () => void }) {
   const traceMarkdown =
     result.trace.length > 1
       ? `\n\n### Redirect Chain\n${result.trace.map((url, i) => `${i + 1}. \`${url}\``).join("\n")}`
@@ -71,16 +61,11 @@ function ResultsView({
       metadata={
         result.finalIp || result.provider ? (
           <Detail.Metadata>
-            {result.finalIp ? (
-              <Detail.Metadata.Label title="IP Address" text={result.finalIp} />
-            ) : null}
+            {result.finalIp ? <Detail.Metadata.Label title="IP Address" text={result.finalIp} /> : null}
             {result.provider ? (
               <Detail.Metadata.Label
                 title="Resolved with"
-                text={
-                  result.provider.charAt(0).toUpperCase() +
-                  result.provider.slice(1)
-                }
+                text={result.provider.charAt(0).toUpperCase() + result.provider.slice(1)}
               />
             ) : null}
           </Detail.Metadata>
@@ -90,16 +75,8 @@ function ResultsView({
         <ActionPanel>
           {!result.error ? (
             <>
-              <Action.OpenInBrowser
-                title="Open in Browser"
-                url={result.finalUrl}
-                onOpen={() => popToRoot()}
-              />
-              <Action.CopyToClipboard
-                title="Copy URL"
-                content={result.finalUrl}
-                onCopy={() => popToRoot()}
-              />
+              <Action.OpenInBrowser title="Open in Browser" url={result.finalUrl} onOpen={() => popToRoot()} />
+              <Action.CopyToClipboard title="Copy URL" content={result.finalUrl} onCopy={() => popToRoot()} />
               {result.finalIp ? (
                 <Action.CopyToClipboard
                   title="Copy IP Address"
@@ -109,26 +86,15 @@ function ResultsView({
                 />
               ) : null}
               {result.trace.length > 1 ? (
-                <Action.CopyToClipboard
-                  title="Copy Trace"
-                  content={result.trace.join("\n")}
-                />
+                <Action.CopyToClipboard title="Copy Trace" content={result.trace.join("\n")} />
               ) : null}
             </>
           ) : (
             <>
               {isTimeoutError && onRetry ? (
-                <Action
-                  title="Retry with Longer Timeout"
-                  icon={Icon.Repeat}
-                  onAction={onRetry}
-                />
+                <Action title="Retry with Longer Timeout" icon={Icon.Repeat} onAction={onRetry} />
               ) : null}
-              <Action.CopyToClipboard
-                title="Copy Error"
-                content={result.error}
-                onCopy={() => popToRoot()}
-              />
+              <Action.CopyToClipboard title="Copy Error" content={result.error} onCopy={() => popToRoot()} />
             </>
           )}
         </ActionPanel>
@@ -145,9 +111,7 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(false);
 
   const preferences = getPreferenceValues<Preferences>();
-  const [provider, setProvider] = useState<DnsProvider>(
-    preferences.dnsProvider
-  );
+  const [provider, setProvider] = useState<DnsProvider>(preferences.dnsProvider);
 
   const maxRedirects = parseClampedInt(preferences.maxRedirects, 10, {
     min: 1,
@@ -192,12 +156,7 @@ export default function Command() {
     const useTimeout = retryTimeout ?? timeout;
 
     try {
-      const result = await resolveUrl(
-        input,
-        maxRedirects,
-        useTimeout,
-        provider
-      );
+      const result = await resolveUrl(input, maxRedirects, useTimeout, provider);
 
       if (result.error) {
         showToast({
@@ -277,26 +236,10 @@ export default function Command() {
         value={provider}
         onChange={(value) => setProvider(value as DnsProvider)}
       >
-        <Form.Dropdown.Item
-          value="cloudflare"
-          title="Cloudflare (1.1.1.1)"
-          icon={Icon.Globe}
-        />
-        <Form.Dropdown.Item
-          value="google"
-          title="Google (8.8.8.8)"
-          icon={Icon.Globe}
-        />
-        <Form.Dropdown.Item
-          value="quad9"
-          title="Quad9 (9.9.9.9)"
-          icon={Icon.Globe}
-        />
-        <Form.Dropdown.Item
-          value="opendns"
-          title="OpenDNS (208.67.222.222)"
-          icon={Icon.Globe}
-        />
+        <Form.Dropdown.Item value="cloudflare" title="Cloudflare (1.1.1.1)" icon={Icon.Globe} />
+        <Form.Dropdown.Item value="google" title="Google (8.8.8.8)" icon={Icon.Globe} />
+        <Form.Dropdown.Item value="quad9" title="Quad9 (9.9.9.9)" icon={Icon.Globe} />
+        <Form.Dropdown.Item value="opendns" title="OpenDNS (208.67.222.222)" icon={Icon.Globe} />
       </Form.Dropdown>
     </Form>
   );

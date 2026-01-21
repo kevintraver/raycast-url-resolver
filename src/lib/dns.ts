@@ -26,15 +26,12 @@ async function queryDoH(
   const endpoint = DNS_PROVIDERS[provider].endpoint;
 
   try {
-    const response = await fetch(
-      `${endpoint}?name=${encodeURIComponent(hostname)}&type=${type}`,
-      { headers: { Accept: "application/dns-json" } }
-    );
+    const response = await fetch(`${endpoint}?name=${encodeURIComponent(hostname)}&type=${type}`, {
+      headers: { Accept: "application/dns-json" },
+    });
 
     if (!response.ok) {
-      debugLog(
-        `[DoH] Failed for ${hostname} (${type}) via ${provider}: HTTP ${response.status}`
-      );
+      debugLog(`[DoH] Failed for ${hostname} (${type}) via ${provider}: HTTP ${response.status}`);
       return null;
     }
 

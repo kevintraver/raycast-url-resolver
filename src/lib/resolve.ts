@@ -34,18 +34,11 @@ export async function resolveUrl(
         if (resolvedIp) {
           debugLog(`[Fetch] Using IP ${resolvedIp} for ${urlObj.hostname}`);
         } else {
-          debugLog(
-            `[Fetch] No DoH result, using original hostname: ${urlObj.hostname}`
-          );
+          debugLog(`[Fetch] No DoH result, using original hostname: ${urlObj.hostname}`);
         }
 
         debugLog(`[Fetch] GET ${currentUrl}`);
-        const response = await fetchWithSNI(
-          currentUrl,
-          resolvedIp,
-          urlObj.hostname,
-          timeout
-        );
+        const response = await fetchWithSNI(currentUrl, resolvedIp, urlObj.hostname, timeout);
 
         debugLog(`[Fetch] Response: ${response.status} ${response.statusText}`);
 
@@ -91,11 +84,7 @@ export async function resolveUrl(
           }
         }
 
-        const resolvedIp = await resolveViaDoH(
-          new URL(currentUrl).hostname,
-          0,
-          provider
-        );
+        const resolvedIp = await resolveViaDoH(new URL(currentUrl).hostname, 0, provider);
 
         return {
           originalUrl: validatedUrl,
@@ -121,11 +110,7 @@ export async function resolveUrl(
 
     debugLog(`[Resolve] Done: ${currentUrl} (${redirectCount} redirects)`);
 
-    const finalIp = await resolveViaDoH(
-      new URL(currentUrl).hostname,
-      0,
-      provider
-    );
+    const finalIp = await resolveViaDoH(new URL(currentUrl).hostname, 0, provider);
 
     return {
       originalUrl: validatedUrl,
