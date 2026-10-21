@@ -8,13 +8,17 @@ import {
   Toast,
   Icon,
   getPreferenceValues,
-  Clipboard,
+  LaunchProps,
   useNavigation,
   popToRoot,
 } from "@raycast/api";
+import { execFile } from "node:child_process";
 import net from "node:net";
+import { promisify } from "node:util";
 import { resolveUrl } from "./lib/resolve";
 import type { ResolveResult } from "./types";
+
+const execFileAsync = promisify(execFile);
 
 function parseClampedInt(
   value: string | undefined,
@@ -43,15 +47,21 @@ function looksLikeUrl(text: string): boolean {
   }
 }
 
+// Local dev links can't be resolved over public DoH, so they aren't worth prefilling
+function isLocalUrl(text: string): boolean {
+  const hostname = new URL(text.match(/^https?:\/\//) ? text : `https://${text}`).hostname.toLowerCase();
+  return hostname === "localhost" || net.isIP(hostname) !== 0;
+}
+
 function ResultsView({ result, onRetry }: { result: ResolveResult; onRetry?: () => void }) {
   const traceMarkdown =
     result.trace.length > 1
-      ? `\n\n### Redirect Chain\n${result.trace.map((url, i) => `${i + 1}. \`${url}\``).join("\n")}`
+      ? `\n\n### Redirect Chain\n${result.trace.map((url, i) => `${i + 1}\\. \`${url}\``).join("\n\n")}`
       : "";
 
   const markdown = result.error
     ? `# Error\n\n${result.error}\n\n---\n\n### Original\n\`${result.originalUrl}\`${traceMarkdown}`
-    : `# Resolved URL\n\n### Original\n\`${result.originalUrl}\`${traceMarkdown}\n\n### Final URL\n[${result.finalUrl}](${result.finalUrl})`;
+    : `# Resolved URL\n\n### Original\n\`${result.originalUrl}\`${traceMarkdown}\n\n### Final URL\n\`${result.finalUrl}\``;
 
   const isTimeoutError = result.error?.toLowerCase().includes("timeout");
 
@@ -105,9 +115,10 @@ function ResultsView({ result, onRetry }: { result: ResolveResult; onRetry?: () 
 
 type DnsProvider = "cloudflare" | "google" | "quad9" | "opendns";
 
-export default function Command() {
+export default function Command(props: LaunchProps<{ arguments: Arguments.ResolveUrl }>) {
+  const initialUrl = props.arguments.url?.trim() ?? "";
   const { push } = useNavigation();
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl);
   const [isLoading, setIsLoading] = useState(false);
 
   const preferences = getPreferenceValues<Preferences>();
@@ -123,14 +134,19 @@ export default function Command() {
   });
 
   useEffect(() => {
+    // A URL typed into the root search argument skips the form and resolves right away
+    if (initialUrl) {
+      handleSubmit(initialUrl);
+      return;
+    }
+
     async function checkClipboard() {
       try {
-        const clipboardText = await Clipboard.readText();
-        if (clipboardText) {
-          const trimmed = clipboardText.trim();
-          if (looksLikeUrl(trimmed)) {
-            setUrl(trimmed);
-          }
+        // Read the system pasteboard directly; Raycast's Clipboard API can return a stale history entry
+        const { stdout } = await execFileAsync("/usr/bin/pbpaste");
+        const trimmed = stdout.trim();
+        if (trimmed && looksLikeUrl(trimmed) && !isLocalUrl(trimmed)) {
+          setUrl(trimmed);
         }
       } catch {
         // Clipboard access failed, ignore
@@ -139,8 +155,8 @@ export default function Command() {
     checkClipboard();
   }, []);
 
-  async function handleSubmit(retryTimeout?: number) {
-    const input = url.trim();
+  async function handleSubmit(rawInput: string, retryTimeout?: number) {
+    const input = rawInput.trim();
     if (!input) {
       showToast({ style: Toast.Style.Failure, title: "Please enter a URL" });
       return;
@@ -169,7 +185,7 @@ export default function Command() {
       }
 
       const onRetry = () => {
-        handleSubmit(timeout * 3);
+        handleSubmit(input, timeout * 3);
       };
 
       push(<ResultsView result={result} onRetry={onRetry} />);
@@ -189,7 +205,7 @@ export default function Command() {
             title="Resolve URL"
             icon={Icon.Link}
             shortcut={{ modifiers: [], key: "return" }}
-            onSubmit={() => handleSubmit()}
+            onSubmit={() => handleSubmit(url)}
           />
           <ActionPanel.Submenu
             // eslint-disable-next-line @raycast/prefer-title-case

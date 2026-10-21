@@ -26,7 +26,15 @@
       "name": "resolve-url",
       "title": "Resolve URL",
       "description": "Resolve a URL to its final destination using DNS-over-HTTPS",
-      "mode": "view"
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "url",
+          "placeholder": "URL",
+          "type": "text",
+          "required": false
+        }
+      ]
     }
   ],
   "preferences": [

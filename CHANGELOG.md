@@ -5,12 +5,15 @@
 ### Changed
 - Renamed extension from "Cloudflare DNS Resolver" to "URL Resolver"
 - Multi-provider DNS support: Choose between Cloudflare, Google, Quad9, or OpenDNS
+- Clipboard auto-fill reads the system clipboard directly and skips localhost and IP URLs
+- Final URL and redirect steps no longer render in the accent color
 
 ### Added
 - DNS provider preference setting
 - Support for Google DNS-over-HTTPS (8.8.8.8)
 - Support for Quad9 DNS-over-HTTPS (9.9.9.9)
 - Support for OpenDNS-over-HTTPS
+- Optional URL argument to resolve straight from Raycast's root search
 
 ## [2.0.0] - 2025-12-13
 

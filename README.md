@@ -4,7 +4,7 @@ Resolve a URL to its final destination and show the full redirect chain. Uses DN
 
 ## Command
 
-- **Resolve URL**: Paste or type a URL (auto-fills from clipboard when it looks like a URL), then press Enter.
+- **Resolve URL**: Paste or type a URL (auto-fills from clipboard when it looks like a URL), then press Enter. Or press Tab in Raycast's root search, paste the URL into the argument field, and press Enter to resolve it immediately.
 
 ## Features
 
